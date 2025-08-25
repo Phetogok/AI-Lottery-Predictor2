@@ -1,0 +1,289 @@
+{% extends 'predictor/base.html' %}
+
+{% block title %}Statistics - Lottery Predictor{% endblock %}
+
+{% block content %}
+<h1 class="mb-4"><i class="fas fa-chart-bar"></i> Lottery Statistics</h1>
+
+<div class="alert alert-info">
+    <p><i class="fas fa-info-circle"></i> Based on {{ total_draws }} historical draws.</p>
+</div>
+
+<ul class="nav nav-tabs mb-4" id="statsTab" role="tablist">
+    <li class="nav-item">
+        <a class="nav-link active" id="frequency-tab" data-toggle="tab" href="#frequency" role="tab">
+            <i class="fas fa-chart-bar"></i> Frequency Analysis
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" id="time-tab" data-toggle="tab" href="#time" role="tab">
+            <i class="fas fa-calendar-alt"></i> Time-Based Analysis
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" id="hot-cold-tab" data-toggle="tab" href="#hot-cold" role="tab">
+            <i class="fas fa-fire"></i> Hot & Cold Numbers
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" id="accuracy-tab" data-toggle="tab" href="#accuracy" role="tab">
+            <i class="fas fa-bullseye"></i> Prediction Accuracy
+        </a>
+    </li>
+</ul>
+
+<div class="tab-content" id="statsTabContent">
+    <!-- Frequency Analysis Tab -->
+    <div class="tab-pane fade show active" id="frequency" role="tabpanel">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Main Number Frequency</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if main_chart %}
+                            <img src="data:image/png;base64,{{ main_chart }}" class="img-fluid" alt="Main Number Frequency Chart">
+                        {% else %}
+                            <p class="text-muted">Not enough data to generate chart.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">Powerball Frequency</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if pb_chart %}
+                            <img src="data:image/png;base64,{{ pb_chart }}" class="img-fluid" alt="Powerball Frequency Chart">
+                        {% else %}
+                            <p class="text-muted">Not enough data to generate chart.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Number Distribution Insights</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Odd/Even Distribution</h6>
+                        <p>Analyzing the distribution of odd and even numbers can reveal patterns.</p>
+                        <ul>
+                            <li>Try combinations with 2-3 odd numbers and 2-3 even numbers</li>
+                            <li>All odd or all even combinations are rare</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>High/Low Distribution</h6>
+                        <p>Balance between high (26-50) and low (1-25) numbers is important.</p>
+                        <ul>
+                            <li>Most winning combinations have 2-3 high numbers and 2-3 low numbers</li>
+                            <li>All high or all low combinations are uncommon</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Time-Based Analysis Tab -->
+    <div class="tab-pane fade" id="time" role="tabpanel">
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Average Number by Month</h5>
+            </div>
+            <div class="card-body">
+                {% if month_chart %}
+                    <img src="data:image/png;base64,{{ month_chart }}" class="img-fluid" alt="Average Number by Month Chart">
+                    <p class="mt-3">This chart shows the average value of drawn numbers for each month, which can reveal seasonal patterns.</p>
+                {% else %}
+                    <p class="text-muted">Not enough data to generate chart.</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Time-Based Patterns</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Day of Week Analysis</h6>
+                        <p>Some numbers may appear more frequently on specific days of the week.</p>
+                        <ul>
+                            <li>Tuesday draws may have different patterns than Friday draws</li>
+                            <li>Consider the day of the week when making predictions</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Seasonal Trends</h6>
+                        <p>Numbers may follow seasonal patterns throughout the year.</p>
+                        <ul>
+                            <li>Summer months might favor different number ranges</li>
+                            <li>Holiday periods may show unique patterns</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Hot & Cold Numbers Tab -->
+    <div class="tab-pane fade" id="hot-cold" role="tabpanel">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0">Hot Numbers (Last 10 Draws)</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if hot_chart %}
+                            <img src="data:image/png;base64,{{ hot_chart }}" class="img-fluid" alt="Hot Numbers Chart">
+                            
+                            <h6 class="mt-4">Top 10 Hot Numbers:</h6>
+                            <div class="text-center my-3">
+                                {% for num in hot_numbers %}
+                                <span class="lottery-ball main">{{ num }}</span>
+                                {% endfor %}
+                            </div>
+                            <p class="text-muted">These numbers appeared most frequently in the last 10 draws.</p>
+                        {% else %}
+                            <p class="text-muted">Not enough data to generate hot numbers.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">Cold Numbers (Not Drawn Recently)</h5>
+                    </div>
+                    <div class="card-body">
+                        <h6>Numbers not drawn in the last 20 draws:</h6>
+                        
+                        {% if cold_numbers %}
+                            <div class="text-center my-3">
+                                {% for num in cold_numbers %}
+                                <span class="lottery-ball main">{{ num }}</span>
+                                {% endfor %}
+                            </div>
+                            <p class="text-muted">These numbers are "due" to appear based on probability theory.</p>
+                            
+                            <div class="alert alert-warning mt-3">
+                                <i class="fas fa-exclamation-triangle"></i> Remember: Each draw is independent, but cold numbers may be worth considering in your strategy.
+                            </div>
+                        {% else %}
+                            <p class="text-muted">All numbers have been drawn in the last 20 draws.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">Hot & Cold Strategy</h5>
+            </div>
+            <div class="card-body">
+                <p>Many lottery players use a combination of hot and cold numbers in their strategy:</p>
+                <ul>
+                    <li><strong>Hot Numbers Strategy:</strong> Playing numbers that have appeared frequently recently, based on the theory that they're on a "streak"</li>
+                    <li><strong>Cold Numbers Strategy:</strong> Playing numbers that haven't appeared recently, based on the theory that they're "due" to appear</li>
+                    <li><strong>Mixed Strategy:</strong> Combining some hot and some cold numbers for a balanced approach</li>
+                </ul>
+                <div class="alert alert-info">
+                    <p><i class="fas fa-lightbulb"></i> <strong>Tip:</strong> Our Ensemble prediction model incorporates both hot and cold number analysis for optimal predictions.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Prediction Accuracy Tab -->
+    <div class="tab-pane fade" id="accuracy" role="tabpanel">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Model Performance Comparison</h5>
+            </div>
+            <div class="card-body">
+                {% if model_accuracy %}
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Model</th>
+                                    <th>Total Predictions</th>
+                                    <th>3+ Numbers Matched</th>
+                                    <th>4+ Numbers Matched</th>
+                                    <th>5 Numbers Matched</th>
+                                    <th>Powerball Matched</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for model_type, stats in model_accuracy.items %}
+                                    {% if stats.count > 0 %}
+                                    <tr>
+                                        <td>{{ model_type|title }}</td>
+                                        <td>{{ stats.count }}</td>
+                                        <td>{{ stats.matches.3|add:stats.matches.4|add:stats.matches.5|floatformat:1 }}%</td>
+                                        <td>{{ stats.matches.4|add:stats.matches.5|floatformat:1 }}%</td>
+                                        <td>{{ stats.matches.5|floatformat:1 }}%</td>
+                                        <td>{{ stats.powerball|floatformat:1 }}%</td>
+                                    </tr>
+                                    {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="alert alert-info mt-3">
+                        <p><i class="fas fa-info-circle"></i> The table shows the percentage of predictions where each model correctly predicted various numbers of matches.</p>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No prediction accuracy data available yet. Generate predictions and wait for actual draws to see accuracy statistics.</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Prediction Tips</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Best Performing Models</h6>
+                        <p>Based on our analysis:</p>
+                        <ul>
+                            <li>Ensemble models typically provide the most balanced predictions</li>
+                            <li>Frequency models work well with large datasets</li>
+                            <li>Pattern models excel at identifying number relationships</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Optimizing Your Predictions</h6>
+                        <ul>
+                            <li>Use higher recency weights (0.7-0.9) for more emphasis on recent draws</li>
+                            <li>Lookback periods of 30-50 draws typically provide the best balance</li>
+                            <li>Consider using multiple prediction models and comparing results</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="alert alert-warning mt-3">
+                    <p><i class="fas fa-exclamation-triangle"></i> <strong>Disclaimer:</strong> While our models use advanced statistical techniques, lottery draws are ultimately random events. Use predictions responsibly and within your means.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

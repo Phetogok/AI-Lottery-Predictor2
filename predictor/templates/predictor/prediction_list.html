@@ -1,0 +1,119 @@
+{% extends 'predictor/base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}All Predictions - Lottery Predictor{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-lightbulb"></i> All Predictions</h1>
+    
+    <div>
+        <a href="{% url 'generate_prediction' %}" class="btn btn-success">
+            <i class="fas fa-magic"></i> Generate Prediction
+        </a>
+    </div>
+</div>
+
+<!-- Move the Clear All button here, before the predictions list -->
+<div class="clear-all-container mb-4 text-right">
+    <button id="clearAllBtn" class="btn btn-danger">
+        <i class="fas fa-trash"></i> Clear All Predictions
+    </button>
+</div>
+
+{% if page_obj %}
+    <div class="row">
+        {% for prediction in page_obj %}
+            <div class="col-md-6 mb-4">
+                <div class="card prediction-card h-100">
+                    <div class="card-header bg-primary text-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">{{ prediction.get_model_type_display }}</h5>
+                            <span class="badge badge-light">{{ prediction.created_at|date:"M d, Y" }}</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-2 text-muted">For Draw Date: {{ prediction.draw_date }}</h6>
+                        
+                        <div class="my-3 text-center">
+                            {% for num in prediction.get_main_numbers %}
+                            <span class="lottery-ball main">{{ num }}</span>
+                            {% endfor %}
+                            <span class="lottery-ball powerball">{{ prediction.powerball }}</span>
+                        </div>
+                        
+                        <div class="progress mb-2">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: {{ prediction.confidence_score }}%">
+                                {{ prediction.confidence_score|floatformat:1 }}% Confidence
+                            </div>
+                        </div>
+                        
+                        <div class="text-center mt-3">
+                            <a href="{% url 'prediction_detail' prediction.pk %}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-search"></i> View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    
+    {% bootstrap_pagination page_obj %}
+{% else %}
+    <div class="alert alert-info">
+        <p>No predictions available. <a href="{% url 'generate_prediction' %}">Generate a prediction</a>.</p>
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const clearAllBtn = document.getElementById('clearAllBtn');
+        
+        if (clearAllBtn) {
+            clearAllBtn.addEventListener('click', function() {
+                if (confirm('Are you sure you want to delete all predictions? This action cannot be undone.')) {
+                    // Send request to clear all predictions
+                    fetch('{% url "clear_all_predictions" %}', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': getCookie('csrftoken'),
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            // Reload the page to show the empty list
+                            window.location.reload();
+                        } else {
+                            alert('Failed to clear predictions. Please try again.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('An error occurred. Please try again.');
+                    });
+                }
+            });
+        }
+        
+        // Helper function to get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    });
+</script>
+{% endblock %}

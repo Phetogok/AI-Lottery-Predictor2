@@ -1,0 +1,52 @@
+{% extends 'predictor/base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}All Draws - Lottery Predictor{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-list"></i> All Draws</h1>
+    <div>
+        <a href="{% url 'add_draw' %}" class="btn btn-success">
+            <i class="fas fa-plus"></i> Add Draw
+        </a>
+        <a href="{% url 'import_data' %}" class="btn btn-primary ml-2">
+            <i class="fas fa-file-import"></i> Import Data
+        </a>
+    </div>
+</div>
+
+{% if page_obj %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead class="thead-light">
+                <tr>
+                    <th>Date</th>
+                    <th>Draw #</th>
+                    <th>Numbers</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for draw in page_obj %}
+                <tr>
+                    <td>{{ draw.draw_date }}</td>
+                    <td>{{ draw.draw_number|default:"-" }}</td>
+                    <td>
+                        {% for num in draw.get_main_numbers %}
+                        <span class="lottery-ball main">{{ num }}</span>
+                        {% endfor %}
+                        <span class="lottery-ball powerball">{{ draw.powerball }}</span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    {% bootstrap_pagination page_obj %}
+{% else %}
+    <div class="alert alert-info">
+        <p>No draws available. <a href="{% url 'add_draw' %}">Add a draw</a> or <a href="{% url 'import_data' %}">import data</a>.</p>
+    </div>
+{% endif %}
+{% endblock %}

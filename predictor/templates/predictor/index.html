@@ -1,0 +1,130 @@
+{% extends 'predictor/base.html' %}
+
+{% block title %}Home - Lottery Predictor{% endblock %}
+
+{% block content %}
+<div class="jumbotron">
+    <h1 class="display-4">Welcome to Lottery Predictor</h1>
+    <p class="lead">Use advanced machine learning models to predict lottery numbers with higher confidence.</p>
+    <hr class="my-4">
+    <p>Get started by generating a prediction or exploring historical data.</p>
+    <a class="btn btn-primary btn-lg" href="{% url 'generate_prediction' %}" role="button">
+        <i class="fas fa-magic"></i> Generate Prediction
+    </a>
+    <a class="btn btn-outline-primary btn-lg ml-2" href="{% url 'statistics' %}" role="button">
+        <i class="fas fa-chart-bar"></i> View Statistics
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-history"></i> Recent Draws</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_draws %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Numbers</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for draw in recent_draws %}
+                                <tr>
+                                    <td>{{ draw.draw_date }}</td>
+                                    <td>
+                                        {% for num in draw.get_main_numbers %}
+                                        <span class="lottery-ball main">{{ num }}</span>
+                                        {% endfor %}
+                                        <span class="lottery-ball powerball">{{ draw.powerball }}</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <a href="{% url 'draw_list' %}" class="btn btn-outline-primary btn-sm">View All Draws</a>
+                {% else %}
+                    <p class="text-muted">No draws available. <a href="{% url 'add_draw' %}">Add a draw</a> or <a href="{% url 'import_data' %}">import data</a>.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-lightbulb"></i> Recent Predictions</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_predictions %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Draw Date</th>
+                                    <th>Model</th>
+                                    <th>Numbers</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for prediction in recent_predictions %}
+                                <tr>
+                                    <td>{{ prediction.draw_date }}</td>
+                                    <td>{{ prediction.get_model_type_display }}</td>
+                                    <td>
+                                        {% for num in prediction.get_main_numbers %}
+                                        <span class="lottery-ball main">{{ num }}</span>
+                                        {% endfor %}
+                                        <span class="lottery-ball powerball">{{ prediction.powerball }}</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <a href="{% url 'prediction_list' %}" class="btn btn-outline-success btn-sm">View All Predictions</a>
+                {% else %}
+                    <p class="text-muted">No predictions available. <a href="{% url 'generate_prediction' %}">Generate a prediction</a>.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-chart-line"></i> Main Number Frequency</h5>
+            </div>
+            <div class="card-body">
+                {% if main_chart %}
+                    <img src="data:image/png;base64,{{ main_chart }}" class="img-fluid" alt="Main Number Frequency Chart">
+                {% else %}
+                    <p class="text-muted">Not enough data to generate chart.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-chart-line"></i> Powerball Frequency</h5>
+            </div>
+            <div class="card-body">
+                {% if pb_chart %}
+                    <img src="data:image/png;base64,{{ pb_chart }}" class="img-fluid" alt="Powerball Frequency Chart">
+                {% else %}
+                    <p class="text-muted">Not enough data to generate chart.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

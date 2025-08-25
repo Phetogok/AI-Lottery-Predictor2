@@ -1,0 +1,40 @@
+{% extends 'predictor/base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}Import Data - Lottery Predictor{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0"><i class="fas fa-file-import"></i> Import Lottery Data</h4>
+    </div>
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            {% bootstrap_form form %}
+            
+            <div class="alert alert-info">
+                <h5><i class="fas fa-info-circle"></i> File Format Requirements:</h5>
+                <ul>
+                    <li>CSV or Excel file (.csv, .xls, .xlsx)</li>
+                    <li>Required columns: draw_date, number_1, number_2, number_3, number_4, number_5, powerball</li>
+                    <li>Optional columns: draw_number</li>
+                    <li>Date format: YYYY-MM-DD</li>
+                    <li>Main numbers must be between 1-50</li>
+                    <li>Powerball must be between 1-20</li>
+                </ul>
+            </div>
+            
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-upload"></i> Upload and Import
+                </button>
+                <a href="{% url 'draw_list' %}" class="btn btn-outline-secondary ml-2">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

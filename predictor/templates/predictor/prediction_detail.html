@@ -1,0 +1,159 @@
+{% extends 'predictor/base.html' %}
+
+{% block title %}Prediction Details - Lottery Predictor{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <div class="d-flex justify-content-between align-items-center">
+            <h4 class="mb-0"><i class="fas fa-lightbulb"></i> Prediction Details</h4>
+            <button id="refreshBtn" class="btn btn-light btn-sm" data-url="{% url 'refresh_prediction' prediction.pk %}">
+                <i class="fas fa-sync-alt"></i> Refresh Prediction
+            </button>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <h5>Prediction Information</h5>
+                <table class="table table-bordered">
+                    <tr>
+                        <th>Model Type</th>
+                        <td>{{ prediction.get_model_type_display }}</td>
+                    </tr>
+                    <tr>
+                        <th>Created On</th>
+                        <td>{{ prediction.created_at }}</td>
+                    </tr>
+                    <tr>
+                        <th>For Draw Date</th>
+                        <td>{{ prediction.draw_date }}</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <h5>Predicted Numbers</h5>
+                <div class="text-center my-4">
+                    <div id="predictionNumbers">
+                        {% for num in prediction.get_main_numbers %}
+                        <span class="lottery-ball main">{{ num }}</span>
+                        {% endfor %}
+                        <span class="lottery-ball powerball">{{ prediction.powerball }}</span>
+                    </div>
+                </div>
+                <div class="progress mb-2">
+                    <div id="confidenceBar" class="progress-bar bg-success" role="progressbar" style="width: {{ prediction.confidence_score }}%">
+                        <span id="confidenceText">{{ prediction.confidence_score|floatformat:1 }}% Confidence</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <hr>
+        
+        {% if actual_draw %}
+            <div class="row">
+                <div class="col-md-12">
+                    <h5>Actual Draw Results</h5>
+                    <div class="alert alert-info">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Draw Date:</strong> {{ actual_draw.draw_date }}</p>
+                                <p><strong>Draw Numbers:</strong></p>
+                                <div class="text-center my-3">
+                                    {% for num in actual_draw.get_main_numbers %}
+                                    <span class="lottery-ball main">{{ num }}</span>
+                                    {% endfor %}
+                                    <span class="lottery-ball powerball">{{ actual_draw.powerball }}</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Accuracy:</strong></p>
+                                <ul>
+                                    <li>Main Numbers Matched: {{ accuracy.main_numbers_matched }} out of 5</li>
+                                    <li>Powerball Matched: {% if accuracy.powerball_matched %}Yes{% else %}No{% endif %}</li>
+                                </ul>
+                                
+                                {% if accuracy.main_numbers_matched == 5 and accuracy.powerball_matched %}
+                                    <div class="alert alert-success">
+                                        <strong>Jackpot!</strong> All numbers matched!
+                                    </div>
+                                {% elif accuracy.main_numbers_matched == 5 %}
+                                    <div class="alert alert-warning">
+                                        <strong>Second Prize!</strong> All main numbers matched!
+                                    </div>
+                                {% elif accuracy.main_numbers_matched >= 3 or accuracy.powerball_matched %}
+                                    <div class="alert alert-info">
+                                        <strong>Prize!</strong> You would have won a smaller prize.
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="alert alert-warning">
+                <p><i class="fas fa-exclamation-triangle"></i> No actual draw results available for {{ prediction.draw_date }} yet.</p>
+            </div>
+        {% endif %}
+        
+        <div class="text-center mt-4">
+            <a href="{% url 'prediction_list' %}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left"></i> Back to Predictions
+            </a>
+            <a href="{% url 'generate_prediction' %}" class="btn btn-success ml-2">
+                <i class="fas fa-magic"></i> Generate New Prediction
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        $('#refreshBtn').click(function() {
+            var btn = $(this);
+            var url = btn.data('url');
+            
+            // Disable button and show loading
+            btn.prop('disabled', true);
+            btn.html('<i class="fas fa-spinner fa-spin"></i> Refreshing...');
+            
+            // Make AJAX request
+            $.ajax({
+                url: url,
+                type: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                success: function(data) {
+                    // Update the numbers
+                    var numbersHtml = '';
+                    for (var i = 0; i < data.numbers.length; i++) {
+                        numbersHtml += '<span class="lottery-ball main">' + data.numbers[i] + '</span>';
+                    }
+                    numbersHtml += '<span class="lottery-ball powerball">' + data.powerball + '</span>';
+                    $('#predictionNumbers').html(numbersHtml);
+                    
+                    // Update confidence
+                    $('#confidenceBar').css('width', data.confidence + '%');
+                    $('#confidenceText').text(data.confidence.toFixed(1) + '% Confidence');
+                    
+                    // Show success message
+                    alert('Prediction refreshed successfully!');
+                },
+                error: function(xhr) {
+                    alert('Error refreshing prediction: ' + xhr.responseJSON.error);
+                },
+                complete: function() {
+                    // Re-enable button
+                    btn.prop('disabled', false);
+                    btn.html('<i class="fas fa-sync-alt"></i> Refresh Prediction');
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
